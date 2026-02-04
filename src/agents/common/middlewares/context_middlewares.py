@@ -24,7 +24,7 @@ def _build_user_context_prompt(request: ModelRequest) -> str | None:
     if not (user_id or username or user_role):
         return None
 
-    lines = ["以下为当前用户信息（仅用于个性化回答，不要在回复中泄露）："]
+    lines = ["以下为当前用户信息："]
     if user_id:
         lines.append(f"- user_id: {user_id}")
     if username:
