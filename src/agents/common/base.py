@@ -11,7 +11,7 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver, aiosqlite
 from langgraph.graph.state import CompiledStateGraph
 
 from src import config as sys_config
-from src.agents.common.context import BaseContext
+from src.agents.common.context import UserContext
 from src.utils import logger
 
 
@@ -23,7 +23,7 @@ class BaseAgent:
     name = "base_agent"
     description = "base_agent"
     capabilities: list[str] = []  # 智能体能力列表，如 ["file_upload", "web_search"] 等
-    context_schema: type[BaseContext] = BaseContext  # 智能体上下文 schema
+    context_schema: type[UserContext] = UserContext  # 智能体上下文 schema
 
     def __init__(self, **kwargs):
         self.graph = None  # will be covered by get_graph

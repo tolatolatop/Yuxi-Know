@@ -1,6 +1,7 @@
 from langchain.agents import create_agent
 
 from src.agents.common import BaseAgent, load_chat_model
+from src.agents.common.middlewares import inject_user_context
 from src.agents.common.tools import get_tools_from_context
 
 
@@ -22,6 +23,7 @@ class MiniAgent(BaseAgent):
             model=load_chat_model(context.model),
             system_prompt=context.system_prompt,
             tools=await get_tools_from_context(context),
+            middleware=[inject_user_context],
             checkpointer=await self._get_checkpointer(),
         )
 

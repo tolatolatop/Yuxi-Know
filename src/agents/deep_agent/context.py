@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Annotated
 
-from src.agents.common.context import BaseContext
+from src.agents.common.context import UserContext
 
 DEEP_PROMPT = """你是一位专家级研究员。你的工作是进行彻底的研究，然后撰写一份精美的报告。
 
@@ -92,7 +92,7 @@ DEEP_PROMPT = """你是一位专家级研究员。你的工作是进行彻底的
 
 
 @dataclass
-class DeepContext(BaseContext):
+class DeepContext(UserContext):
     """
     Deep Agent 的上下文配置，继承自 BaseContext
     专门用于深度分析任务的配置管理

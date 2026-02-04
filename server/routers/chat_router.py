@@ -542,7 +542,12 @@ async def chat_agent(
         # 构造运行时配置，如果没有thread_id则生成一个
         user_id = str(current_user.id)
         thread_id = config.get("thread_id")
-        input_context = {"user_id": user_id, "thread_id": thread_id}
+        input_context = {
+            "user_id": user_id,
+            "thread_id": thread_id,
+            "username": current_user.username,
+            "user_role": current_user.role,
+        }
 
         if not thread_id:
             thread_id = str(uuid.uuid4())
@@ -777,7 +782,12 @@ async def resume_agent_chat(
         graph = await agent.get_graph()
 
         # 加载 context（包含 tools, model 等配置）
-        input_context = {"user_id": str(current_user.id), "thread_id": thread_id}
+        input_context = {
+            "user_id": str(current_user.id),
+            "thread_id": thread_id,
+            "username": current_user.username,
+            "user_role": current_user.role,
+        }
         context = agent.context_schema.from_file(module_name=agent.module_name, input_context=input_context)
         logger.debug(f"Resume with context: {context}")
 

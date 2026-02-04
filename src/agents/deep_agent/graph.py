@@ -7,7 +7,7 @@ from langchain.agents import create_agent
 from langchain.agents.middleware import ModelRequest, SummarizationMiddleware, TodoListMiddleware, dynamic_prompt
 
 from src.agents.common import BaseAgent, load_chat_model
-from src.agents.common.middlewares import inject_attachment_context
+from src.agents.common.middlewares import inject_attachment_context, inject_user_context
 from src.agents.common.tools import get_tavily_search
 
 from .context import DeepContext
@@ -108,6 +108,7 @@ class DeepAgent(BaseAgent):
             system_prompt=context.system_prompt,
             middleware=[
                 context_aware_prompt,  # 动态系统提示词
+                inject_user_context,  # 用户信息注入
                 inject_attachment_context,  # 附件上下文注入
                 TodoListMiddleware(),
                 FilesystemMiddleware(),

@@ -15,6 +15,7 @@ from langgraph.types import interrupt
 from collections.abc import Callable
 
 from src.agents.common import BaseAgent, load_chat_model
+from src.agents.common.middlewares import inject_user_context
 from src.agents.common.tools import get_tools_from_context
 
 logger = logging.getLogger("Yuxi.project_manager")
@@ -65,9 +66,9 @@ def set_project_id(project_id: str, runtime: ToolRuntime) -> Command:
 @tool
 def update_quality_metrics(runtime: ToolRuntime) -> Command:
     """Update the quality metrics."""
-    ans = interrupt("是否更新质量指标？")
+    ans = interrupt({"instruction": "是否更新质量指标？", "content": "请输入更新质量指标的内容。"})
     tool_call_id = runtime.tool_call_id
-    if "no" in ans.lower():
+    if not ans:
         return Command(
             update={
                 "messages": [
@@ -135,6 +136,7 @@ class DemoBotAgent(BaseAgent):
             system_prompt=context.system_prompt,
             middleware=[
                 ModelRetryMiddleware(),  # 模型重试中间件
+                inject_user_context,  # 用户信息注入
                 ProjectMiddleware(),
             ],
             checkpointer=await self._get_checkpointer(),

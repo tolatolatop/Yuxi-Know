@@ -2,9 +2,7 @@ from langchain.agents import create_agent
 from langchain.agents.middleware import ModelRetryMiddleware
 
 from src.agents.common import BaseAgent, load_chat_model
-from src.agents.common.middlewares import (
-    inject_attachment_context,
-)
+from src.agents.common.middlewares import inject_attachment_context, inject_user_context
 from src.agents.common.tools import get_tools_from_context
 
 
@@ -30,6 +28,7 @@ class ChatbotAgent(BaseAgent):
             tools=await get_tools_from_context(context),
             system_prompt=context.system_prompt,
             middleware=[
+                inject_user_context,  # 用户信息注入
                 inject_attachment_context,  # 附件上下文注入
                 ModelRetryMiddleware(),  # 模型重试中间件
             ],

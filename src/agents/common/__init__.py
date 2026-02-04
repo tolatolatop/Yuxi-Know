@@ -12,7 +12,7 @@ For other specific functions, use the original import style:
 
 # Base classes - 核心基类
 from src.agents.common.base import BaseAgent
-from src.agents.common.context import BaseContext
+from src.agents.common.context import BaseContext, UserContext
 
 # Model utilities - 模型加载
 from src.agents.common.models import load_chat_model
@@ -28,6 +28,7 @@ __all__ = [
     # Base classes
     "BaseAgent",
     "BaseContext",
+    "UserContext",
     "BaseState",
     # Model utilities
     "load_chat_model",

@@ -199,3 +199,32 @@ class BaseContext:
                         if isinstance(metadata, dict) and "__template_metadata__" in metadata:
                             return metadata["__template_metadata__"]
         return {}
+
+
+@dataclass(kw_only=True)
+class UserContext(BaseContext):
+    """
+    扩展 BaseContext 的用户上下文。
+
+    使用方式：
+    - 在 Agent 上设置 `context_schema = UserContext`，或在自定义 Context 中继承 UserContext。
+    - 在调用 Agent 时通过 input_context 传入 `username`、`user_role`，即可在
+      `request.runtime.context` 中访问这些字段，并被用户信息中间件注入到系统提示中。
+    """
+
+    username: str = field(
+        default="",
+        metadata={
+            "name": "用户名",
+            "configurable": False,
+            "description": "运行时注入的用户名，不参与配置持久化",
+        },
+    )
+    user_role: str = field(
+        default="",
+        metadata={
+            "name": "用户角色",
+            "configurable": False,
+            "description": "运行时注入的用户角色，不参与配置持久化",
+        },
+    )

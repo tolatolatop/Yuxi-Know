@@ -3,14 +3,15 @@ from typing import Annotated
 
 from langchain.agents import create_agent
 
-from src.agents.common import BaseAgent, BaseContext, load_chat_model
+from src.agents.common import BaseAgent, UserContext, load_chat_model
+from src.agents.common.middlewares import inject_user_context
 from src.agents.common.toolkits.mysql import get_mysql_tools
 from src.agents.common.tools import gen_tool_info, get_buildin_tools, get_tools_from_context
 from src.utils import logger
 
 
 @dataclass(kw_only=True)
-class ReporterContext(BaseContext):
+class ReporterContext(UserContext):
     # 覆盖默认的工具列表，添加 MySQL 工具包
     tools: Annotated[list[dict], {"__template_metadata__": {"kind": "tools"}}] = field(
         default_factory=lambda: [t.name for t in get_mysql_tools()],
@@ -45,6 +46,7 @@ class SqlReporterAgent(BaseAgent):
             model=load_chat_model(context.model),  # 使用 context 中的模型配置
             system_prompt=context.system_prompt,
             tools=await get_tools_from_context(context, extra_tools=get_mysql_tools()),
+            middleware=[inject_user_context],
             checkpointer=await self._get_checkpointer(),
         )
 
