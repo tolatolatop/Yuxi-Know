@@ -10,6 +10,7 @@ from langchain.agents.middleware import ModelRetryMiddleware
 from langchain.tools import ToolRuntime, tool
 from langchain.agents.middleware import ModelRequest, ModelResponse
 from langchain.messages import ToolMessage
+from langgraph.types import interrupt
 
 from collections.abc import Callable
 
@@ -62,10 +63,32 @@ def set_project_id(project_id: str, runtime: ToolRuntime) -> Command:
 
 
 @tool
-def update_quality_metrics(runtime: ToolRuntime) -> str:
+def update_quality_metrics(runtime: ToolRuntime) -> Command:
     """Update the quality metrics."""
-    runtime.state["quality_metrics"] = query_quality_metrics(runtime.state["project_id"])
-    return "Quality metrics updated successfully."
+    ans = interrupt("是否更新质量指标？")
+    tool_call_id = runtime.tool_call_id
+    if "no" in ans.lower():
+        return Command(
+            update={
+                "messages": [
+                    ToolMessage(
+                        content="Quality metrics not updated.",
+                        tool_call_id=tool_call_id,
+                    )
+                ],
+            }
+        )
+    return Command(
+        update={
+            "messages": [
+                ToolMessage(
+                    content="Quality metrics updated successfully.",
+                    tool_call_id=tool_call_id,
+                )
+            ],
+            "quality_metrics": query_quality_metrics(runtime.state["project_id"]),
+        }
+    )
 
 
 @tool
