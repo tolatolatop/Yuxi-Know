@@ -381,6 +381,10 @@ async def get_tools_from_context(context, extra_tools=None) -> list:
     # 3. MCP 工具（使用统一入口，自动过滤 disabled_tools）
     if context.mcps:
         for server_name in context.mcps:
+            logger.debug(
+                "Loading MCP tools with user context",
+                extra={"server_name": server_name, "user_id": context.user_id},
+            )
             mcp_tools = await get_enabled_mcp_tools(server_name, user_id=context.user_id)
             selected_tools.extend(mcp_tools)
 

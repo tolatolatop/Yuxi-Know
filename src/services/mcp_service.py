@@ -236,6 +236,7 @@ async def get_mcp_tools(
     # If we have it in cache and don't need to force refresh, use cache.
     if not user_id and not force_refresh and cache and server_name in _mcp_tools_cache:
         all_processed_tools = _mcp_tools_cache[server_name]
+        logger.debug("Using cached MCP tools", extra={"server_name": server_name})
     else:
         # Need to fetch from server
         try:
@@ -248,6 +249,10 @@ async def get_mcp_tools(
                 headers = dict(server_config.get("headers") or {})
                 headers["x-user-id"] = user_id
                 client_config["headers"] = headers
+                logger.debug(
+                    "Injected x-user-id into MCP headers",
+                    extra={"server_name": server_name, "user_id": user_id, "headers": headers},
+                )
 
             client = await get_mcp_client({server_name: client_config})
             if client is None:
