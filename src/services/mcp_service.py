@@ -207,6 +207,7 @@ async def get_mcp_tools(
     disabled_tools: list[str] = None,
     cache: bool = True,
     force_refresh: bool = False,
+    user_id: str | None = None,
 ) -> list[Callable[..., Any]]:
     """Get MCP tools for a specific server.
 
@@ -221,6 +222,7 @@ async def get_mcp_tools(
         disabled_tools: List of tool names to filter out from the RETURN value (does not affect cache)
         cache: Whether to use/update the cache (default: True)
         force_refresh: Whether to force a refresh from the server (default: False)
+        user_id: Optional user id to inject into MCP headers
     """
     global _mcp_tools_cache
 
@@ -232,7 +234,7 @@ async def get_mcp_tools(
 
     # 2. Check Cache / Fetch Strategy
     # If we have it in cache and don't need to force refresh, use cache.
-    if not force_refresh and cache and server_name in _mcp_tools_cache:
+    if not user_id and not force_refresh and cache and server_name in _mcp_tools_cache:
         all_processed_tools = _mcp_tools_cache[server_name]
     else:
         # Need to fetch from server
@@ -242,6 +244,10 @@ async def get_mcp_tools(
             # Extract connection config
             server_config = mcp_servers[server_name]
             client_config = {k: v for k, v in server_config.items() if k not in ("disabled_tools",)}
+            if user_id:
+                headers = dict(server_config.get("headers") or {})
+                headers["x-user-id"] = user_id
+                client_config["headers"] = headers
 
             client = await get_mcp_client({server_name: client_config})
             if client is None:
@@ -266,7 +272,7 @@ async def get_mcp_tools(
                 all_processed_tools.append(tool)
 
             # Update Cache (Store the FULL list)
-            if cache:
+            if cache and not user_id:
                 _mcp_tools_cache[server_name] = all_processed_tools
 
                 # Update Stats
@@ -559,7 +565,7 @@ def get_mcp_server_names() -> list[str]:
     return list(MCP_SERVERS.keys())
 
 
-async def get_enabled_mcp_tools(server_name: str) -> list:
+async def get_enabled_mcp_tools(server_name: str, user_id: str | None = None) -> list:
     """Get MCP server tools (auto-filtering disabled_tools).
 
     Unified entry point for Agents, automatically:
@@ -579,7 +585,7 @@ async def get_enabled_mcp_tools(server_name: str) -> list:
         return []
 
     disabled_tools = config.get("disabled_tools") or []
-    return await get_mcp_tools(server_name, disabled_tools=disabled_tools)
+    return await get_mcp_tools(server_name, disabled_tools=disabled_tools, user_id=user_id)
 
 
 async def get_servers_config(names: list[str]) -> dict[str, dict[str, Any]]:
