@@ -246,13 +246,20 @@ async def get_mcp_tools(
             server_config = mcp_servers[server_name]
             client_config = {k: v for k, v in server_config.items() if k not in ("disabled_tools",)}
             if user_id:
-                headers = dict(server_config.get("headers") or {})
-                headers["x-user-id"] = user_id
-                client_config["headers"] = headers
-                logger.debug(
-                    "Injected x-user-id into MCP headers",
-                    extra={"server_name": server_name, "user_id": user_id, "headers": headers},
-                )
+                transport = server_config.get("transport")
+                if transport in {"sse", "streamable_http", "streamable-http", "http"}:
+                    headers = dict(server_config.get("headers") or {})
+                    headers["x-user-id"] = user_id
+                    client_config["headers"] = headers
+                    logger.debug(
+                        "Injected x-user-id into MCP headers",
+                        extra={"server_name": server_name, "user_id": user_id, "headers": headers},
+                    )
+                else:
+                    logger.debug(
+                        "Skipped x-user-id injection for non-HTTP transport",
+                        extra={"server_name": server_name, "user_id": user_id, "transport": transport},
+                    )
 
             client = await get_mcp_client({server_name: client_config})
             if client is None:
