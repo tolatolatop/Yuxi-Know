@@ -136,3 +136,61 @@ async def test_get_mcp_tools_sets_handle_tool_error(monkeypatch):
 
     mcp_service.clear_mcp_cache()
 
+
+async def test_get_mcp_tools_adds_user_id_to_http_headers(monkeypatch):
+    mcp_service.clear_mcp_cache()
+
+    config = {
+        "transport": "streamable_http",
+        "url": "https://example.com/mcp",
+        "headers": {"Authorization": "Bearer token"},
+        "disabled_tools": [],
+    }
+    captured: dict = {}
+
+    async def fake_get_enabled_mcp_server_config(server_name: str, db=None):
+        del server_name, db
+        return config
+
+    async def fake_get_mcp_client(server_configs):
+        captured.update(server_configs["demo"])
+        tool = SimpleNamespace(name="demo_tool", metadata={})
+        return _FakeClient([tool])
+
+    monkeypatch.setattr(mcp_service, "get_enabled_mcp_server_config", fake_get_enabled_mcp_server_config)
+    monkeypatch.setattr(mcp_service, "get_mcp_client", fake_get_mcp_client)
+
+    await mcp_service.get_mcp_tools("demo", user_id="user-1")
+
+    assert captured["headers"] == {
+        "Authorization": "Bearer token",
+        "x-yuki-user-id": "user-1",
+        "YUKI_USER_ID": "user-1",
+    }
+
+    mcp_service.clear_mcp_cache()
+
+
+async def test_get_mcp_tools_adds_user_id_to_stdio_env(monkeypatch):
+    mcp_service.clear_mcp_cache()
+
+    config = {"transport": "stdio", "command": "demo", "env": {"EXISTING": "1"}, "disabled_tools": []}
+    captured: dict = {}
+
+    async def fake_get_enabled_mcp_server_config(server_name: str, db=None):
+        del server_name, db
+        return config
+
+    async def fake_get_mcp_client(server_configs):
+        captured.update(server_configs["demo"])
+        tool = SimpleNamespace(name="demo_tool", metadata={})
+        return _FakeClient([tool])
+
+    monkeypatch.setattr(mcp_service, "get_enabled_mcp_server_config", fake_get_enabled_mcp_server_config)
+    monkeypatch.setattr(mcp_service, "get_mcp_client", fake_get_mcp_client)
+
+    await mcp_service.get_mcp_tools("demo", user_id="user-1")
+
+    assert captured["env"] == {"EXISTING": "1", "YUKI_USER_ID": "user-1"}
+
+    mcp_service.clear_mcp_cache()

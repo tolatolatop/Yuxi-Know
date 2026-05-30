@@ -57,7 +57,7 @@ class DeepAgent(BaseAgent):
         model = load_chat_model(context.model)
         sub_model = load_chat_model(context.subagents_model)
         search_tools = await self.get_tools()
-        all_mcp_tools = await get_tools_from_all_servers()
+        all_mcp_tools = await get_tools_from_all_servers(user_id=context.user_id)
         # 合并搜索工具和 MCP 工具
 
         # 从数据库加载 subagent specs（工具名称已解析）

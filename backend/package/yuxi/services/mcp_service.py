@@ -170,6 +170,25 @@ async def get_mcp_client(
         return None
 
 
+def _with_user_id_mcp_config(server_config: dict[str, Any], user_id: str | None = None) -> dict[str, Any]:
+    """Return an MCP config with current user identity attached."""
+    if not user_id:
+        return server_config
+
+    config = dict(server_config)
+    if config.get("transport") == "stdio":
+        env = dict(config.get("env") or {})
+        env["YUKI_USER_ID"] = str(user_id)
+        config["env"] = env
+        return config
+
+    headers = dict(config.get("headers") or {})
+    headers["x-yuki-user-id"] = str(user_id)
+    headers["YUKI_USER_ID"] = str(user_id)
+    config["headers"] = headers
+    return config
+
+
 def to_camel_case(s: str) -> str:
     """Convert string to lowerCamelCase."""
 
@@ -219,6 +238,7 @@ async def get_mcp_tools(
     disabled_tools: list[str] = None,
     cache: bool = True,
     force_refresh: bool = False,
+    user_id: str | None = None,
 ) -> list[Callable[..., Any]]:
     """Get MCP tools for a specific server.
 
@@ -242,6 +262,8 @@ async def get_mcp_tools(
     if server_config is None:
         logger.warning(f"MCP server '{server_name}' not found in database or disabled")
         return []
+
+    server_config = _with_user_id_mcp_config(server_config, user_id)
 
     # 配置 hash 直接基于完整配置生成。只要数据库中的配置发生变化，
     # 本地工具缓存 key 就会变化，从而自然触发重建。
@@ -319,12 +341,12 @@ async def get_mcp_tools(
     return all_processed_tools
 
 
-async def get_tools_from_all_servers() -> list[Callable[..., Any]]:
+async def get_tools_from_all_servers(user_id: str | None = None) -> list[Callable[..., Any]]:
     """Get all tools from all configured MCP servers."""
     server_configs = await _load_enabled_mcp_server_configs()
     all_tools = []
     for server_name in server_configs:
-        tools = await get_mcp_tools(server_name, additional_servers=server_configs)
+        tools = await get_mcp_tools(server_name, additional_servers=server_configs, user_id=user_id)
         all_tools.extend(tools)
     return all_tools
 
@@ -564,7 +586,7 @@ async def toggle_tool_enabled(
 # =============================================================================
 
 
-async def get_enabled_mcp_tools(server_name: str) -> list:
+async def get_enabled_mcp_tools(server_name: str, user_id: str | None = None) -> list:
     """Get MCP server tools (auto-filtering disabled_tools).
 
     Unified entry point for Agents, automatically:
@@ -584,7 +606,12 @@ async def get_enabled_mcp_tools(server_name: str) -> list:
         return []
 
     disabled_tools = config.get("disabled_tools") or []
-    return await get_mcp_tools(server_name, additional_servers={server_name: config}, disabled_tools=disabled_tools)
+    return await get_mcp_tools(
+        server_name,
+        additional_servers={server_name: config},
+        disabled_tools=disabled_tools,
+        user_id=user_id,
+    )
 
 
 async def get_servers_config(names: list[str]) -> dict[str, dict[str, Any]]:

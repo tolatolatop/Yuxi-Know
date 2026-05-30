@@ -342,7 +342,7 @@ class SkillsMiddleware(AgentMiddleware):
         async def load_mcp_tools(server_name: str) -> list:
             """加载单个 MCP 服务器的工具"""
             try:
-                mcp_tools = await get_enabled_mcp_tools(server_name)
+                mcp_tools = await get_enabled_mcp_tools(server_name, user_id=getattr(context, "user_id", None))
                 if not mcp_tools:
                     logger.warning(f"SkillsMiddleware: mcp dependency unavailable, skip: {server_name}")
                 return mcp_tools

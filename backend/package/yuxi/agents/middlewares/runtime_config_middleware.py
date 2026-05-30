@@ -151,7 +151,7 @@ class RuntimeConfigMiddleware(AgentMiddleware):
                 continue
             selected_mcp_servers.add(server_name)
             try:
-                mcp_tools = await get_enabled_mcp_tools(server_name)
+                mcp_tools = await get_enabled_mcp_tools(server_name, user_id=getattr(context, "user_id", None))
                 if not mcp_tools:
                     logger.warning(f"RuntimeConfigMiddleware: mcp dependency unavailable, skip: {server_name}")
                 selected_tools.extend(mcp_tools)
